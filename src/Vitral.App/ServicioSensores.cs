@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.ServiceProcess;
 using Vitral.Core.Ejecucion;
 using Vitral.Core.Sensores;
@@ -18,7 +16,6 @@ internal static class ServicioSensores
 
     private static readonly string Origen = Path.Combine(AppContext.BaseDirectory, "servicio");
     private static readonly string Destino = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Vitral", "Sensores");
-    private static readonly string Datos = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Vitral");
     private static readonly string Ejecutable = Path.Combine(Destino, "VitralSensores.exe");
 
     public static bool Incluido => File.Exists(Path.Combine(Origen, "VitralSensores.exe"));
@@ -109,7 +106,6 @@ internal static class ServicioSensores
             }
             File.Copy(origen, Path.Combine(Destino, nombre), overwrite: true);
         }
-        PrepararDatos();
         if (!existe)
         {
             Sc("create", CanalSensores.NombreServicio, "binPath=", $"\"{Ejecutable}\"", "start=", "auto", "DisplayName=", "Vitral · Sensores");
@@ -147,31 +143,6 @@ internal static class ServicioSensores
             servicio.Stop();
             servicio.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20));
         }
-    }
-
-    private static void PrepararDatos()
-    {
-        var previa = new DirectoryInfo(Datos);
-        if (previa.Exists)
-        {
-            if (previa.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            {
-                previa.Delete();
-            }
-            else
-            {
-                previa.Delete(recursive: true);
-            }
-        }
-        var carpeta = Directory.CreateDirectory(Datos);
-        var acceso = new DirectorySecurity();
-        acceso.SetOwner(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null));
-        acceso.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
-        const InheritanceFlags herencia = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-        acceso.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, herencia, PropagationFlags.None, AccessControlType.Allow));
-        acceso.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, herencia, PropagationFlags.None, AccessControlType.Allow));
-        acceso.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null), FileSystemRights.ReadAndExecute, herencia, PropagationFlags.None, AccessControlType.Allow));
-        carpeta.SetAccessControl(acceso);
     }
 
     private static void Sc(params string[] argumentos)

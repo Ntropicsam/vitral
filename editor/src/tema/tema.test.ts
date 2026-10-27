@@ -25,7 +25,7 @@ const vacio: Tema = {
   nombre: "x",
   ancho: 640,
   alto: 480,
-  fondo: { tipo: "Color", color: "#0d0f14", archivo: null, ajuste: "Cubrir" },
+  fondo: { tipo: "Color", color: "#0d0f14", archivo: null, ajuste: "Cubrir", marco: null, radioMarco: 0 },
   capas: [],
 };
 

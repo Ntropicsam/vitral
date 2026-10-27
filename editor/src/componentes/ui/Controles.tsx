@@ -1,6 +1,7 @@
 import { Checkbox, Select, Slider } from "radix-ui";
 import { IconCheck, IconChevronDown } from "@tabler/icons-react";
 import { useId, type ReactNode } from "react";
+import { useT } from "../../i18n";
 
 export function Campo({ etiqueta, valor, children }: { etiqueta: string; valor?: ReactNode; children: ReactNode }) {
   return (
@@ -56,6 +57,7 @@ export function Selector(props: {
   vacio?: string;
   onCambio: (v: string) => void;
 }) {
+  const t = useT();
   const id = useId();
   const actual = props.grupos.flatMap((g) => g.opciones).find((o) => o.valor === props.valor);
   return (
@@ -66,7 +68,7 @@ export function Selector(props: {
           id={id}
           className="flex h-8 items-center justify-between gap-2 rounded-control border border-borde-fuerte bg-campo px-2.5 text-left hover:border-texto-3"
         >
-          <span className="truncate">{actual?.texto ?? props.vacio ?? "Elige uno"}</span>
+          <span className="truncate">{actual?.texto ?? props.vacio ?? t("control.elige")}</span>
           <IconChevronDown size={14} aria-hidden className="shrink-0 text-texto-2" />
         </Select.Trigger>
         <Select.Portal>

@@ -11,6 +11,7 @@ import {
   IconTypography,
 } from "@tabler/icons-react";
 import { cambiar, editarTema, obtener, useEstado } from "../estado/tienda";
+import { traducir, useT } from "../i18n";
 import { textoSensor } from "../tema/formato";
 import { agregarCapa, borrarCapa, crearCapa, duplicarCapa, moverEnOrden } from "../tema/operaciones";
 import type { Capa, TipoCapa } from "../tema/tipos";
@@ -21,6 +22,7 @@ const ICONOS = { sensor: IconTemperature, texto: IconTypography, medidor: IconGa
 export const ID_FONDO = "__fondo";
 
 function Fila({ capa }: { capa: Capa }) {
+  const t = useT();
   const seleccionada = useEstado((e) => e.seleccion === capa.id);
   const valor = useEstado((e) => ("sensorId" in capa ? e.valores[capa.sensorId] : undefined));
   const tipoSensor = useEstado((e) => ("sensorId" in capa ? e.sensores.find((s) => s.id === capa.sensorId)?.tipo : undefined));
@@ -41,8 +43,8 @@ function Fila({ capa }: { capa: Capa }) {
       </button>
       <button
         type="button"
-        aria-label={capa.visible ? `Ocultar ${capa.nombre}` : `Mostrar ${capa.nombre}`}
-        onClick={() => editarTema((t) => ({ ...t, capas: t.capas.map((c) => (c.id === capa.id ? { ...c, visible: !c.visible } : c)) }))}
+        aria-label={t(capa.visible ? "capas.ocultar" : "capas.mostrar", { nombre: capa.nombre })}
+        onClick={() => editarTema((tm) => ({ ...tm, capas: tm.capas.map((c) => (c.id === capa.id ? { ...c, visible: !c.visible } : c)) }))}
         className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-control text-texto-3 hover:bg-campo hover:text-texto"
       >
         {capa.visible ? <IconEye size={15} aria-hidden /> : <IconEyeOff size={15} aria-hidden />}
@@ -52,9 +54,14 @@ function Fila({ capa }: { capa: Capa }) {
 }
 
 function agregar(tipo: TipoCapa) {
-  const { tema, sensores } = obtener();
+  const { tema, sensores, ajustes } = obtener();
   if (!tema) return;
-  const capa = crearCapa(tipo, tema, sensores);
+  const idioma = ajustes.idiomaEfectivo;
+  const capa = crearCapa(tipo, tema, sensores, {
+    sensor: traducir(idioma, "capas.sensor"),
+    texto: traducir(idioma, "capas.texto"),
+    medidor: traducir(idioma, "capas.medidor"),
+  });
   editarTema((t) => agregarCapa(t, capa));
   cambiar({ seleccion: capa.id });
 }
@@ -78,6 +85,7 @@ export function accionesDeCapa(id: string) {
 }
 
 export function PanelCapas() {
+  const t = useT();
   const capas = useEstado((e) => e.tema?.capas);
   const seleccion = useEstado((e) => e.seleccion);
   const fondoSeleccionado = seleccion === ID_FONDO;
@@ -85,15 +93,15 @@ export function PanelCapas() {
   const acciones = seleccion && seleccion !== ID_FONDO ? accionesDeCapa(seleccion) : null;
 
   return (
-    <aside className="flex min-h-0 flex-col border-r border-borde bg-panel" aria-label="Capas">
+    <aside className="flex min-h-0 flex-col border-r border-borde bg-panel" aria-label={t("capas.titulo")}>
       <div className="flex items-center justify-between px-3 pb-1.5 pt-3">
-        <h2 className="text-[13px] font-semibold text-texto-2">Capas</h2>
+        <h2 className="text-[13px] font-semibold text-texto-2">{t("capas.titulo")}</h2>
         {acciones && (
           <div className="flex gap-0.5">
-            <BotonIcono nombre="Subir la capa" onClick={acciones.subir}><IconArrowUp size={15} aria-hidden /></BotonIcono>
-            <BotonIcono nombre="Bajar la capa" onClick={acciones.bajar}><IconArrowDown size={15} aria-hidden /></BotonIcono>
-            <BotonIcono nombre="Duplicar la capa" onClick={acciones.duplicar}><IconCopy size={15} aria-hidden /></BotonIcono>
-            <BotonIcono nombre="Borrar la capa" onClick={acciones.borrar}><IconTrash size={15} aria-hidden /></BotonIcono>
+            <BotonIcono nombre={t("capas.subir")} onClick={acciones.subir}><IconArrowUp size={15} aria-hidden /></BotonIcono>
+            <BotonIcono nombre={t("capas.bajar")} onClick={acciones.bajar}><IconArrowDown size={15} aria-hidden /></BotonIcono>
+            <BotonIcono nombre={t("capas.duplicar")} onClick={acciones.duplicar}><IconCopy size={15} aria-hidden /></BotonIcono>
+            <BotonIcono nombre={t("capas.borrar")} onClick={acciones.borrar}><IconTrash size={15} aria-hidden /></BotonIcono>
           </div>
         )}
       </div>
@@ -107,14 +115,14 @@ export function PanelCapas() {
             className={`flex h-8 w-full items-center gap-2 rounded-control px-2 text-left ${fondoSeleccionado ? "bg-realce text-texto" : "text-texto-2 hover:bg-realce/60"}`}
           >
             <IconPhoto size={16} aria-hidden />
-            Fondo
+            {t("capas.fondo")}
           </button>
         </li>
       </ul>
       <div className="mt-2 grid grid-cols-3 gap-1 px-3">
-        <BotonAgregar nombre="Sensor" onClick={() => agregar("sensor")}><IconTemperature size={16} aria-hidden /></BotonAgregar>
-        <BotonAgregar nombre="Texto" onClick={() => agregar("texto")}><IconTypography size={16} aria-hidden /></BotonAgregar>
-        <BotonAgregar nombre="Medidor" onClick={() => agregar("medidor")}><IconGauge size={16} aria-hidden /></BotonAgregar>
+        <BotonAgregar nombre={t("capas.sensor")} onClick={() => agregar("sensor")}><IconTemperature size={16} aria-hidden /></BotonAgregar>
+        <BotonAgregar nombre={t("capas.texto")} onClick={() => agregar("texto")}><IconTypography size={16} aria-hidden /></BotonAgregar>
+        <BotonAgregar nombre={t("capas.medidor")} onClick={() => agregar("medidor")}><IconGauge size={16} aria-hidden /></BotonAgregar>
       </div>
       <TusTemas />
     </aside>

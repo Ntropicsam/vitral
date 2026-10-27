@@ -16,6 +16,8 @@ internal static class Mensajes
     {
         conexion = e.Pantalla.Conexion.ToString(),
         modelo = e.Pantalla.Info?.Modelo,
+        detectado = e.Pantalla.Info?.ModeloDetectado,
+        forzado = e.Pantalla.Info?.Forzado ?? false,
         ancho = e.Pantalla.Info?.Ancho,
         alto = e.Pantalla.Info?.Alto,
         detalle = e.Pantalla.Detalle,
@@ -43,7 +45,7 @@ internal static class Mensajes
     public static string Sensores(IReadOnlyList<SensorInfo> sensores, bool leeCpu) => Armar("sensores", new
     {
         leeCpu,
-        lista = sensores.Select(s => new { id = s.Id, nombre = s.Nombre, hardware = s.Hardware, tipo = s.Tipo.ToString() }),
+        lista = sensores.Select(s => new { id = s.Id, nombre = s.Nombre, hardware = s.Hardware, tipo = s.Tipo.ToString(), agregado = s.Agregado }),
     });
 
     public static string Valores(LecturaSensores lectura) => Armar("valores", new { valores = lectura.Valores });
@@ -61,7 +63,12 @@ internal static class Mensajes
 
     public static string Guardado(string id) => Armar("guardado", new { id });
 
-    public static string Ajustes(Core.Ajustes a) => Armar("ajustes", new { brillo = a.Brillo, rotacion = a.Rotacion });
+    public static string Ajustes(object datos) => Armar("ajustes", datos);
+
+    public static string Modelos(IEnumerable<(string Clave, ModeloPanel Modelo)> modelos) => Armar("modelos", new
+    {
+        lista = modelos.Select(m => new { clave = m.Clave, nombre = m.Modelo.Nombre, ancho = m.Modelo.Ancho, alto = m.Modelo.Alto }),
+    });
 
     public static string Error(string mensaje) => Armar("error", new { mensaje });
 

@@ -3,6 +3,8 @@ export type FormatoValor = "Corto" | "Detallado";
 export type EstiloMedidor = "Anillo" | "Barra";
 export type TipoFondo = "Color" | "Imagen" | "Animacion";
 export type AjusteFondo = "Cubrir" | "Contener" | "Estirar";
+export type PosicionEtiqueta = "Encima" | "Debajo" | "Lado";
+export type Distribucion = "Completa" | "MarcoIzquierda" | "MarcoArriba" | "MarcoCentrado" | "SoloDatos";
 
 interface CapaBase {
   id: string;
@@ -19,8 +21,11 @@ export interface CapaSensor extends CapaBase {
   formato: FormatoValor;
   tamano: number;
   color: string;
+  fuente: string;
   tamanoEtiqueta: number;
   colorEtiqueta: string;
+  fuenteEtiqueta: string;
+  posicionEtiqueta: PosicionEtiqueta;
   alineacion: Alineacion;
   velo: boolean;
 }
@@ -30,6 +35,7 @@ export interface CapaTexto extends CapaBase {
   texto: string;
   tamano: number;
   color: string;
+  fuente: string;
   alineacion: Alineacion;
   velo: boolean;
 }
@@ -44,6 +50,7 @@ export interface CapaMedidor extends CapaBase {
   grosor: number;
   color: string;
   colorPista: string;
+  fuente: string;
   mostrarValor: boolean;
   formato: FormatoValor;
 }
@@ -51,11 +58,20 @@ export interface CapaMedidor extends CapaBase {
 export type Capa = CapaSensor | CapaTexto | CapaMedidor;
 export type TipoCapa = Capa["tipo"];
 
+export interface Marco {
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+}
+
 export interface Fondo {
   tipo: TipoFondo;
   color: string;
   archivo: string | null;
   ajuste: AjusteFondo;
+  marco: Marco | null;
+  radioMarco: number;
 }
 
 export interface Tema {
@@ -83,6 +99,7 @@ export interface SensorInfo {
   nombre: string;
   hardware: string;
   tipo: TipoSensor;
+  agregado?: "promedio" | "maximo" | null;
 }
 
 export interface Caja {

@@ -32,6 +32,14 @@ foto detrás de las temperaturas de tu CPU y tu GPU.
 - **Tus propios temas.** Imágenes, GIF y videos de fondo, con cifras de sensores,
   textos y medidores de anillo o de barra encima. Sirve cualquier sensor que lea
   LibreHardwareMonitor.
+- **Marcos para el fondo.** Un tema nuevo empieza por su fondo: Vitral te sugiere
+  distribuciones que lo acomodan sin estirarlo, como un video a la izquierda con una
+  franja de cifras al lado o un marco centrado con esquinas redondeadas.
+- **Sensores fáciles de encontrar.** Agrupados por dispositivo (CPU, GPU, placa
+  madre…) y por tipo, con buscador y un promedio y un máximo unificados para cada
+  serie, como todos los núcleos de la CPU.
+- **Ocho fuentes.** Una para cada cifra y otra para su etiqueta, que puede ir
+  encima, debajo o al lado.
 - **Cifras que se leen.** El editor mide el contraste de cada cifra contra el cuadro
   más claro del fondo y te avisa si cuesta leerla, con un velo de un clic para
   arreglarlo.
@@ -55,19 +63,24 @@ foto detrás de las temperaturas de tu CPU y tu GPU.
 
 1. Descarga `Vitral-win-Setup.exe` de la [última versión](https://github.com/Ntropicsam/vitral/releases/latest) y ábrelo.
 2. Cierra TRCC desde su ícono de la bandeja: solo un programa a la vez puede usar la
-   pantalla. Si TRCC se abre solo con Windows, el menú de Vitral lo puede apagar.
+   pantalla. Si TRCC se abre solo con Windows, los ajustes de Vitral lo pueden apagar.
 3. Para ver la temperatura de la CPU, dale **Activarla** en el editor o en la
    notificación. Windows pide permiso una vez; ver [Seguridad](#seguridad).
-4. Si quieres que arranque con Windows, márcalo en el menú de la bandeja.
+4. Si quieres que arranque con Windows, márcalo en los ajustes (el engranaje del
+   editor). Un clic en el ícono de la bandeja abre el editor.
 
 Pide Windows 10 u 11 de 64 bits y WebView2, que viene con Windows 11. No hace falta
 Zadig ni drivers: Windows ya le pone WinUSB a la pantalla.
+
+La interfaz está en español y en inglés y sigue el idioma de Windows; lo puedes
+cambiar en los ajustes.
 
 ## Pantallas compatibles
 
 Vitral habla con las pantallas USB de identificador `87AD:70DB` (ChiZhu). Muchos
 modelos lo comparten: cada pantalla dice cuál es al conectarse y Vitral elige la
-resolución con esa respuesta.
+resolución con esa respuesta. Si se equivoca, puedes elegir tu modelo a mano en los
+ajustes.
 
 | Modelo | Resolución | Estado |
 |---|---|---|
@@ -165,8 +178,8 @@ Vitral está empezando y hay mucho por hacer, así que cualquier ayuda suma:
 - **Probar una pantalla** que todavía no esté marcada como probada.
 - **Pantallas RGB565** (320 × 320, 640 × 172) y los otros protocolos (`87CD:70DB`,
   `0402:3922`, `0416:5302`).
-- **Traducir** la interfaz, empezando por el inglés.
-- **Funciones del editor**: medidores nuevos, relojes, gráficas, más fuentes.
+- **Traducir** la interfaz a más idiomas.
+- **Funciones del editor**: medidores nuevos, relojes, gráficas.
 - **Firmar** el instalador.
 
 En [CONTRIBUTING.md](CONTRIBUTING.md) está cómo empezar. Los *issues* y *pull
@@ -181,7 +194,8 @@ Se apoya en el trabajo de quienes descifraron estas pantallas y lo compartieron:
 [trvision](https://github.com/0iroN/trvision) y
 [oled-webui](https://github.com/Mistress-Lukutar/oled-webui). Los sensores salen de
 [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
-y las cifras van en [Barlow](https://github.com/jpt/barlow) (SIL Open Font License).
+y las fuentes incluidas (Barlow, Saira, Rajdhani, Chakra Petch, Bebas Neue, Anton,
+IBM Plex Mono y Russo One) tienen la licencia SIL Open Font License.
 
 Vitral no está afiliado a Thermalright.
 

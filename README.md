@@ -32,6 +32,14 @@ temperatures.
 - **Your own themes.** Images, GIFs and videos as backgrounds, with sensor values,
   text and ring or bar gauges on top. Any sensor LibreHardwareMonitor can read is
   available.
+- **Frames for the background.** Start a theme from its background: Vitral
+  suggests layouts that fit it without stretching, like a video on the left with a
+  strip of values beside it, or a centered frame with rounded corners.
+- **Sensors easy to find.** Grouped by device (CPU, GPU, motherboard…) and type,
+  with a search box and a unified average and maximum for every series, like all
+  CPU cores.
+- **Eight fonts.** Pick one for each value and another for its label, and place
+  the label above, below or beside it.
 - **Readable numbers.** The editor measures the contrast of every value against the
   brightest frame of the background and warns you when it is hard to read, with a
   one-click backdrop to fix it.
@@ -55,23 +63,24 @@ temperatures.
 
 1. Download `Vitral-win-Setup.exe` from the [latest release](https://github.com/Ntropicsam/vitral/releases/latest) and run it.
 2. Close TRCC from its tray icon: only one program can use the screen at a time. If
-   TRCC starts with Windows, Vitral's tray menu can turn that off.
-3. To show the CPU temperature, click **Activarla** (enable it) in the editor, or
-   the notification. Windows asks for permission once; see [Security](#security).
-4. Turn on **Arrancar con Windows** (start with Windows) from the tray menu if you
-   want it.
+   TRCC starts with Windows, Vitral's settings can turn that off.
+3. To show the CPU temperature, click **Enable it** in the editor, or the
+   notification. Windows asks for permission once; see [Security](#security).
+4. Turn on **Start with Windows** in the settings (the gear in the editor) if you
+   want it. Clicking the tray icon opens the editor.
 
 Requires Windows 10 or 11 (64-bit) and WebView2, which ships with Windows 11. No
 Zadig or extra drivers: Windows already binds WinUSB to the screen.
 
-> The interface is in Spanish for now. Translations are one of the easiest ways to
-> help.
+The interface is in English and Spanish and follows the Windows language; you can
+change it in the settings.
 
 ## Supported screens
 
 Vitral speaks to USB screens with the id `87AD:70DB` (ChiZhu). Many models share it:
 each screen reports which one it is when it connects, and Vitral picks the
-resolution from that answer.
+resolution from that answer. If it guesses wrong, choose your model by hand in the
+settings.
 
 | Model | Resolution | Status |
 |---|---|---|
@@ -169,8 +178,8 @@ Vitral is young and there is plenty to do, so help of any size is welcome:
 - **Testing a screen** that is not marked as tested yet.
 - **RGB565 screens** (320 × 320, 640 × 172) and the other protocols (`87CD:70DB`,
   `0402:3922`, `0416:5302`).
-- **Translations** of the interface, starting with English.
-- **Editor features**: new gauge styles, clocks, graphs, more fonts.
+- **Translations** of the interface into more languages.
+- **Editor features**: new gauge styles, clocks, graphs.
 - **Code signing** for the installer.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) to get set up. Issues and pull requests
@@ -185,8 +194,8 @@ It stands on the work of people who reverse-engineered these screens and shared 
 [trvision](https://github.com/0iroN/trvision) and
 [oled-webui](https://github.com/Mistress-Lukutar/oled-webui). Sensors come from
 [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor),
-and numbers are set in [Barlow](https://github.com/jpt/barlow) (SIL Open Font
-License).
+and the bundled fonts (Barlow, Saira, Rajdhani, Chakra Petch, Bebas Neue, Anton,
+IBM Plex Mono and Russo One) are under the SIL Open Font License.
 
 Vitral is not affiliated with Thermalright.
 

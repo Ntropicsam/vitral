@@ -23,6 +23,7 @@ internal static class Program
             .Run();
 
         Registro.Configurar(Rutas.Registro);
+        Textos.Usar(new Vitral.Core.AlmacenAjustes(Rutas.Ajustes).Leer().Idioma);
         ApplicationConfiguration.Initialize();
 
         if (args.Length == 2 && args[0] == ServicioSensores.Argumento)
@@ -62,7 +63,7 @@ internal static class Program
             catch (Exception e)
             {
                 Registro.Escribir($"No se pudo arrancar: {e}");
-                MessageBox.Show($"Vitral no pudo leer sus temas: {e.Message}", "Vitral", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(Textos.T("temas.error", e.Message), "Vitral", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }, null);
 

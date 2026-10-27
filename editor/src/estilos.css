@@ -10,6 +10,46 @@
   font-weight: 500;
   src: url("../../src/Vitral.Core/Fuentes/BarlowSemiCondensed-Medium.ttf") format("truetype");
 }
+@font-face {
+  font-family: "V-barlow";
+  src: url("../../src/Vitral.Core/Fuentes/BarlowSemiCondensed-SemiBold.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-saira";
+  src: url("../../src/Vitral.Core/Fuentes/SairaCondensed-SemiBold.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-rajdhani";
+  src: url("../../src/Vitral.Core/Fuentes/Rajdhani-SemiBold.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-chakra";
+  src: url("../../src/Vitral.Core/Fuentes/ChakraPetch-SemiBold.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-bebas";
+  src: url("../../src/Vitral.Core/Fuentes/BebasNeue-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-anton";
+  src: url("../../src/Vitral.Core/Fuentes/Anton-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-plexmono";
+  src: url("../../src/Vitral.Core/Fuentes/IBMPlexMono-SemiBold.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "V-russo";
+  src: url("../../src/Vitral.Core/Fuentes/RussoOne-Regular.ttf") format("truetype");
+  font-display: swap;
+}
 
 @theme {
   --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;

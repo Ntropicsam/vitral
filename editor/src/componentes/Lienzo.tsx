@@ -3,6 +3,7 @@ import { cambiar, editarTema, obtener, useEstado } from "../estado/tienda";
 import { pegar, type Guia } from "../lienzo/guias";
 import { actualizarCapa, conTamano, moverCapa, tamanoDe } from "../tema/operaciones";
 import type { Caja } from "../tema/tipos";
+import { useT } from "../i18n";
 import { LineaTiempo } from "./LineaTiempo";
 import { accionesDeCapa, ID_FONDO } from "./PanelCapas";
 
@@ -32,6 +33,7 @@ function useEscala(ancho: number, alto: number) {
 }
 
 export function Lienzo() {
+  const t = useT();
   const ancho = useEstado((e) => e.tema?.ancho ?? 640);
   const alto = useEstado((e) => e.tema?.alto ?? 480);
   const vista = useEstado((e) => e.vista);
@@ -71,16 +73,31 @@ export function Lienzo() {
     e.stopPropagation();
     e.preventDefault();
     const capa = obtener().tema?.capas.find((c) => c.id === caja.id);
-    if (!capa) return;
+    if (!capa && caja.id !== ID_FONDO) return;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     cambiar({ seleccion: caja.id });
-    setArrastre({ id: caja.id, modo, inicioX: e.clientX, inicioY: e.clientY, caja, tamano: tamanoDe(capa), aplicado: { dx: 0, dy: 0 } });
+    setArrastre({ id: caja.id, modo, inicioX: e.clientX, inicioY: e.clientY, caja, tamano: capa ? tamanoDe(capa) : 0, aplicado: { dx: 0, dy: 0 } });
+  }
+
+  function moverMarco(dx: number, dy: number, modo: Arrastre["modo"], caja: Caja) {
+    editarTema((t) => {
+      const x = modo === "mover" ? Math.round(Math.min(Math.max(0, caja.x + dx), t.ancho - caja.ancho)) : caja.x;
+      const y = modo === "mover" ? Math.round(Math.min(Math.max(0, caja.y + dy), t.alto - caja.alto)) : caja.y;
+      const w = modo === "tamano" ? Math.round(Math.min(Math.max(32, caja.ancho + dx), t.ancho - caja.x)) : caja.ancho;
+      const h = modo === "tamano" ? Math.round(Math.min(Math.max(32, caja.alto + dy), t.alto - caja.y)) : caja.alto;
+      return { ...t, fondo: { ...t.fondo, marco: { x, y, ancho: w, alto: h } } };
+    });
   }
 
   function mover(e: React.PointerEvent) {
     if (!arrastre) return;
     const dx = (e.clientX - arrastre.inicioX) / escala;
     const dy = (e.clientY - arrastre.inicioY) / escala;
+    if (arrastre.id === ID_FONDO) {
+      moverMarco(dx, dy, arrastre.modo, arrastre.caja);
+      setArrastre({ ...arrastre, aplicado: arrastre.modo === "mover" ? { dx, dy } : { dx: 0, dy: 0 } });
+      return;
+    }
     if (arrastre.modo === "tamano") {
       const capa = obtener().tema?.capas.find((c) => c.id === arrastre.id);
       if (!capa) return;
@@ -106,9 +123,9 @@ export function Lienzo() {
       <div ref={ref} className="relative flex min-h-0 flex-1 items-center justify-center" onPointerDown={() => cambiar({ seleccion: null })}>
         <div className="relative rounded-[6px] bg-black" style={{ width: ancho * escala, height: alto * escala }}>
           {vista ? (
-            <img src={vista.url} alt="Vista de la pantalla" draggable={false} className="pointer-events-none size-full rounded-[6px]" />
+            <img src={vista.url} alt={t("lienzo.vista")} draggable={false} className="pointer-events-none size-full rounded-[6px]" />
           ) : (
-            <div className="flex size-full items-center justify-center text-texto-3">Preparando la vista…</div>
+            <div className="flex size-full items-center justify-center text-texto-3">{t("lienzo.preparando")}</div>
           )}
           {cajas.map((c) => {
             const elegida = c.id === seleccion;
@@ -116,18 +133,18 @@ export function Lienzo() {
               <div
                 key={c.id}
                 role="button"
-                aria-label="Mover la capa"
+                aria-label={t("lienzo.mover")}
                 tabIndex={-1}
                 onPointerDown={(e) => empezar(e, c, "mover")}
                 onPointerMove={mover}
                 onPointerUp={terminar}
                 onPointerCancel={terminar}
-                className={`absolute cursor-move rounded-[3px] ${elegida ? "outline-[1.5px] outline-acento" : "hover:outline hover:outline-acento/50"}`}
+                className={`absolute cursor-move rounded-[3px] ${elegida ? "outline-[1.5px] outline-acento" : "hover:outline hover:outline-acento/50"} ${c.id === ID_FONDO && !elegida ? "outline-dashed outline-1 outline-texto-3/40" : ""}`}
                 style={{ left: c.x * escala - 4, top: c.y * escala - 4, width: c.ancho * escala + 8, height: c.alto * escala + 8 }}
               >
                 {elegida && (
                   <div
-                    aria-label="Cambiar el tamaño"
+                    aria-label={t("lienzo.tamano")}
                     onPointerDown={(e) => empezar(e, c, "tamano")}
                     onPointerMove={mover}
                     onPointerUp={terminar}
@@ -149,7 +166,7 @@ export function Lienzo() {
       </div>
       <LineaTiempo />
       <p className="px-4 pb-3 text-[12px] text-texto-3">
-        Lo que ves aquí es lo que sale a la pantalla. Arrastra para mover (Alt para soltar las guías), las flechas mueven de a un píxel.
+        {t("lienzo.ayuda")}
       </p>
     </main>
   );

@@ -1,14 +1,23 @@
 import { textoSensor } from "../tema/formato";
 import type { Caja, SensorInfo, Tema } from "../tema/tipos";
 import type { Canal } from "./puente";
-import type { DeVitral, HaciaVitral } from "./tipos";
+import type { AjustesVitral, DeVitral, HaciaVitral } from "./tipos";
 
 const sensores: SensorInfo[] = [
   { id: "/amdcpu/0/temperature/2", nombre: "Core (Tctl/Tdie)", hardware: "AMD Ryzen 5 5600T", tipo: "Temperatura" },
+  { id: "/amdcpu/0/temperature/3", nombre: "CCD1 (Tdie)", hardware: "AMD Ryzen 5 5600T", tipo: "Temperatura" },
   { id: "/amdcpu/0/load/0", nombre: "CPU Total", hardware: "AMD Ryzen 5 5600T", tipo: "Carga" },
+  { id: "/amdcpu/0/load/1", nombre: "CPU Core #1", hardware: "AMD Ryzen 5 5600T", tipo: "Carga" },
+  { id: "/amdcpu/0/load/2", nombre: "CPU Core #2", hardware: "AMD Ryzen 5 5600T", tipo: "Carga" },
+  { id: "/amdcpu/0/load/3", nombre: "CPU Core #3", hardware: "AMD Ryzen 5 5600T", tipo: "Carga" },
+  { id: "/amdcpu/carga/core/promedio", nombre: "CPU Core", hardware: "AMD Ryzen 5 5600T", tipo: "Carga", agregado: "promedio" },
+  { id: "/amdcpu/carga/core/maximo", nombre: "CPU Core", hardware: "AMD Ryzen 5 5600T", tipo: "Carga", agregado: "maximo" },
+  { id: "/amdcpu/0/clock/1", nombre: "Core #1", hardware: "AMD Ryzen 5 5600T", tipo: "Reloj" },
   { id: "/gpu-amd/0/temperature/0", nombre: "GPU Core", hardware: "AMD Radeon RX 9060 XT", tipo: "Temperatura" },
   { id: "/gpu-amd/0/temperature/7", nombre: "GPU Hot Spot", hardware: "AMD Radeon RX 9060 XT", tipo: "Temperatura" },
   { id: "/ram/data/0", nombre: "Memory Used", hardware: "Generic Memory", tipo: "Memoria" },
+  { id: "/lpc/nct6798d/0/temperature/0", nombre: "Motherboard", hardware: "ASUS PRIME B550M-A", tipo: "Temperatura" },
+  { id: "/lpc/nct6798d/0/fan/1", nombre: "Fan #2", hardware: "ASUS PRIME B550M-A", tipo: "Ventilador" },
 ];
 
 const temaInicial: Tema = {
@@ -16,20 +25,39 @@ const temaInicial: Tema = {
   nombre: "Neón",
   ancho: 640,
   alto: 480,
-  fondo: { tipo: "Animacion", color: "#0d0f14", archivo: "fondo.cuadros", ajuste: "Cubrir" },
+  fondo: { tipo: "Animacion", color: "#0d0f14", archivo: "fondo.cuadros", ajuste: "Cubrir", marco: null, radioMarco: 0 },
   capas: [
-    { tipo: "medidor", id: "carga", nombre: "Carga de la CPU", visible: true, x: 40, y: 110, sensorId: sensores[1]!.id, estilo: "Anillo", minimo: 0, maximo: 100, ancho: 240, grosor: 18, color: "#ffb020", colorPista: "#262b35", mostrarValor: true, formato: "Corto" },
-    { tipo: "sensor", id: "cpu", nombre: "CPU", visible: true, x: 600, y: 70, sensorId: sensores[0]!.id, etiqueta: "CPU", formato: "Corto", tamano: 96, color: "#f4efe6", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false },
-    { tipo: "sensor", id: "gpu", nombre: "GPU", visible: true, x: 600, y: 260, sensorId: sensores[2]!.id, etiqueta: "GPU", formato: "Corto", tamano: 96, color: "#7ad3ff", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false },
+    { tipo: "medidor", id: "carga", nombre: "Carga de la CPU", visible: true, x: 40, y: 110, sensorId: "/amdcpu/0/load/0", estilo: "Anillo", minimo: 0, maximo: 100, ancho: 240, grosor: 18, color: "#ffb020", colorPista: "#262b35", mostrarValor: true, formato: "Corto", fuente: "barlow" },
+    { tipo: "sensor", id: "cpu", nombre: "CPU", visible: true, x: 600, y: 70, sensorId: sensores[0]!.id, etiqueta: "CPU", formato: "Corto", tamano: 96, color: "#f4efe6", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false, fuente: "barlow", fuenteEtiqueta: "barlow", posicionEtiqueta: "Encima" },
+    { tipo: "sensor", id: "gpu", nombre: "GPU", visible: true, x: 600, y: 260, sensorId: "/gpu-amd/0/temperature/0", etiqueta: "GPU", formato: "Corto", tamano: 96, color: "#7ad3ff", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false, fuente: "barlow", fuenteEtiqueta: "barlow", posicionEtiqueta: "Encima" },
   ],
 };
 
 export function canalSimulado(): Canal {
   const oyentes = new Set<(m: DeVitral) => void>();
   let tema = temaInicial;
+  let idTema = "neon";
   let cuadro = 0;
   let pausado = false;
-  let brillo = 100;
+  let ajustes: AjustesVitral = {
+    brillo: 100,
+    rotacion: 0,
+    modoJuego: true,
+    idioma: "auto",
+    idiomaEfectivo: navigator.language.startsWith("es") ? "es" : "en",
+    modeloForzado: null,
+    arranque: true,
+    trccArrancaSolo: true,
+    version: "0.1.2",
+    lector: { incluido: true, activo: false, version: null, desactualizado: false },
+    actualizacion: { instalado: true, nueva: null, revisando: false },
+  };
+  const modelos = [
+    { clave: "7-2", nombre: "Mjolnir Vision Pro", ancho: 640, alto: 480 },
+    { clave: "5-0", nombre: "Frozen Warframe Pro", ancho: 320, alto: 320 },
+    { clave: "1-48", nombre: "Elite Vision 360", ancho: 480, alto: 480 },
+  ];
+  const enviarAjustes = () => emitir({ tipo: "ajustes", ...ajustes });
   const valores: Record<string, number> = {};
   const lienzo = document.createElement("canvas");
   lienzo.width = 640;
@@ -41,6 +69,15 @@ export function canalSimulado(): Canal {
   function dibujar() {
     ctx.fillStyle = tema.fondo.color;
     ctx.fillRect(0, 0, 640, 480);
+    const marco = tema.fondo.marco;
+    ctx.save();
+    if (marco) {
+      ctx.beginPath();
+      ctx.roundRect(marco.x, marco.y, marco.ancho, marco.alto, tema.fondo.radioMarco);
+      ctx.clip();
+      ctx.fillStyle = "#1d2433";
+      ctx.fillRect(marco.x, marco.y, marco.ancho, marco.alto);
+    }
     const paso = (cuadro / 48) * 640;
     ctx.fillStyle = "#151a24";
     for (let x = -640; x < 1280; x += 160) {
@@ -51,7 +88,9 @@ export function canalSimulado(): Canal {
       ctx.lineTo(x + paso + 240, 0);
       ctx.fill();
     }
+    ctx.restore();
     const cajas: Caja[] = [];
+    if (marco) cajas.push({ id: "__fondo", x: marco.x, y: marco.y, ancho: marco.ancho, alto: marco.alto });
     for (const capa of tema.capas) {
       if (!capa.visible) continue;
       if (capa.tipo === "medidor") {
@@ -100,8 +139,8 @@ export function canalSimulado(): Canal {
       ctx.fillText(texto, x, capa.y + alto);
       cajas.push({ id: capa.id, x, y: capa.y, ancho, alto });
     }
-    if (brillo < 100) {
-      ctx.fillStyle = `rgba(0,0,0,${1 - brillo / 100})`;
+    if (ajustes.brillo < 100) {
+      ctx.fillStyle = `rgba(0,0,0,${1 - ajustes.brillo / 100})`;
       ctx.fillRect(0, 0, 640, 480);
     }
     const jpeg = lienzo.toDataURL("image/jpeg", 0.85).split(",")[1]!;
@@ -109,16 +148,15 @@ export function canalSimulado(): Canal {
   }
 
   function leer() {
-    valores[sensores[0]!.id] = 48 + Math.random() * 9;
-    valores[sensores[1]!.id] = 10 + Math.random() * 30;
-    valores[sensores[2]!.id] = 58 + Math.random() * 7;
-    valores[sensores[3]!.id] = 66 + Math.random() * 8;
-    valores[sensores[4]!.id] = 11 + Math.random();
+    for (const s of sensores) {
+      const base = s.tipo === "Temperatura" ? 50 : s.tipo === "Carga" ? 20 : s.tipo === "Reloj" ? 4200 : s.tipo === "Ventilador" ? 900 : 11;
+      valores[s.id] = base * (0.85 + Math.random() * 0.3);
+    }
     emitir({ tipo: "valores", valores: { ...valores } });
   }
 
   function estado() {
-    emitir({ tipo: "estado", conexion: "Conectada", modelo: "Mjolnir Vision Pro", ancho: 640, alto: 480, detalle: "", fps: pausado ? 1 : 24, cuadro, cuadros: 48, pausado });
+    emitir({ tipo: "estado", conexion: "Conectada", modelo: "Mjolnir Vision Pro", detectado: "Mjolnir Vision Pro", forzado: ajustes.modeloForzado !== null, ancho: 640, alto: 480, detalle: "", fps: pausado ? 1 : 24, cuadro, cuadros: 48, pausado });
   }
 
   const resumen = [{ id: "neon", nombre: "Neón", miniatura: null }, { id: "bosque", nombre: "Bosque", miniatura: null }];
@@ -131,7 +169,8 @@ export function canalSimulado(): Canal {
           document.fonts.load('500 22px "Barlow Semi Condensed"'),
         ]).then(dibujar);
         emitir({ tipo: "sensores", leeCpu: false, lista: sensores });
-        emitir({ tipo: "ajustes", brillo, rotacion: 0 });
+        enviarAjustes();
+        emitir({ tipo: "modelos", lista: modelos });
         emitir({ tipo: "temas", activo: "neon", lista: resumen });
         emitir({ tipo: "tema", id: "neon", tema });
         leer();
@@ -143,7 +182,7 @@ export function canalSimulado(): Canal {
       case "tema.cambiar":
         tema = m.tema;
         dibujar();
-        setTimeout(() => emitir({ tipo: "guardado", id: "neon" }), 500);
+        setTimeout(() => emitir({ tipo: "guardado", id: idTema }), 500);
         break;
       case "animacion.pausar":
         pausado = m.pausado;
@@ -160,12 +199,44 @@ export function canalSimulado(): Canal {
         break;
       }
       case "lector.instalar":
-        setTimeout(() => emitir({ tipo: "sensores", leeCpu: true, lista: sensores }), 1500);
+        setTimeout(() => {
+          ajustes = { ...ajustes, lector: { incluido: true, activo: true, version: "0.1.2", desactualizado: false } };
+          enviarAjustes();
+          emitir({ tipo: "sensores", leeCpu: true, lista: sensores });
+        }, 1500);
         break;
       case "ajustes.cambiar":
-        brillo = m.brillo ?? brillo;
-        emitir({ tipo: "ajustes", brillo, rotacion: m.rotacion ?? 0 });
+      {
+        const { tipo: _, ...cambios } = m;
+        ajustes = { ...ajustes, ...cambios };
+        if (cambios.idioma) ajustes.idiomaEfectivo = cambios.idioma === "auto" ? (navigator.language.startsWith("es") ? "es" : "en") : cambios.idioma;
+        enviarAjustes();
+        estado();
         dibujar();
+        break;
+      }
+      case "trcc.desactivar":
+        ajustes = { ...ajustes, trccArrancaSolo: false };
+        enviarAjustes();
+        break;
+      case "actualizacion.buscar":
+        ajustes = { ...ajustes, actualizacion: { ...ajustes.actualizacion, revisando: true } };
+        enviarAjustes();
+        setTimeout(() => {
+          ajustes = { ...ajustes, actualizacion: { instalado: true, nueva: "0.1.3", revisando: false } };
+          enviarAjustes();
+        }, 1200);
+        break;
+      case "tema.nuevo": {
+        const marco = m.distribucion === "Completa" || m.distribucion === "SoloDatos" ? null : m.distribucion === "MarcoIzquierda" ? { x: 0, y: 0, ancho: 400, alto: 480 } : m.distribucion === "MarcoArriba" ? { x: 0, y: 0, ancho: 640, alto: 320 } : { x: 60, y: 40, ancho: 520, alto: 300 };
+        tema = { ...tema, nombre: "Tema nuevo", fondo: { ...tema.fondo, tipo: m.distribucion === "SoloDatos" ? "Color" : "Animacion", marco, radioMarco: 0 } };
+        idTema = `nuevo-${Date.now()}`;
+        emitir({ tipo: "tema", id: idTema, tema });
+        dibujar();
+        break;
+      }
+      case "fondo.archivo":
+        setTimeout(() => emitir({ tipo: "tema", id: idTema, tema }), 800);
         break;
       default:
         break;

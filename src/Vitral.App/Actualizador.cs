@@ -45,6 +45,8 @@ internal sealed class Actualizador : IDisposable
 
     public void Dispose() => _reloj.Dispose();
 
+    public Task BuscarAhoraAsync() => RevisarAsync();
+
     private async Task RevisarAsync()
     {
         if (!_gestor.IsInstalled || _lista is not null || Interlocked.Exchange(ref _revisando, 1) == 1)

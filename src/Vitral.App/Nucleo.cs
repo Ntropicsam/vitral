@@ -26,7 +26,17 @@ internal sealed class Nucleo : IDisposable
         _sensores = new SensoresIntercambiables(CrearFuente());
         Motor = new Motor(new Pantalla(new BuscadorWinUsb()), _sensores, new RelojSistema());
         Motor.CambiarSalida(Ajustes.Salida);
+        Motor.ForzarModelo(Ajustes.ModeloForzado);
+        Textos.Usar(Ajustes.Idioma);
         Motor.EstadoCambio += e => _panel = e.Pantalla.Info ?? _panel;
+    }
+
+    public (int Ancho, int Alto) TamanoPantalla => (_panel?.Ancho ?? TemasIniciales.AnchoBase, _panel?.Alto ?? TemasIniciales.AltoBase);
+
+    public Tema CrearTema(Distribucion distribucion)
+    {
+        var (ancho, alto) = TamanoPantalla;
+        return Distribuciones.Crear(distribucion, Textos.T("temaNuevo"), _sensores.Sensores, ancho, alto);
     }
 
     public AlmacenTemas Temas { get; }
@@ -103,8 +113,6 @@ internal sealed class Nucleo : IDisposable
         return instalado;
     }
 
-    public Tema TemaNuevo() =>
-        TemasIniciales.Plantilla(_sensores.Sensores, _panel?.Ancho ?? TemasIniciales.AnchoBase, _panel?.Alto ?? TemasIniciales.AltoBase) with { Nombre = "Tema nuevo" };
 
     public TemaGuardado? Activo() =>
         Ajustes.TemaActivo is { } id ? Temas.Intentar(id) ?? Temas.Primero() : Temas.Primero();
@@ -136,6 +144,8 @@ internal sealed class Nucleo : IDisposable
         Ajustes = cambio(Ajustes).Normalizado();
         _almacenAjustes.Guardar(Ajustes);
         Motor.CambiarSalida(Ajustes.Salida);
+        Motor.ForzarModelo(Ajustes.ModeloForzado);
+        Textos.Usar(Ajustes.Idioma);
         AjustesCambiaron?.Invoke();
     }
 

@@ -11,14 +11,16 @@ internal sealed class VentanaEditor : Form
     public const string HostTemas = "temas.vitral.local";
 
     private readonly Nucleo _nucleo;
+    private readonly Actualizador _actualizador;
     private readonly WebView2 _web = new() { Dock = DockStyle.Fill, DefaultBackgroundColor = Color.FromArgb(0x12, 0x14, 0x19) };
     private Puente? _puente;
     private CuadroRenderizado? _ultimo;
     private int _vistaEnCamino;
 
-    public VentanaEditor(Nucleo nucleo)
+    public VentanaEditor(Nucleo nucleo, Actualizador actualizador)
     {
         _nucleo = nucleo;
+        _actualizador = actualizador;
         Text = "Vitral";
         Icon = IconoVitral.Icono(32);
         MinimumSize = new Size(1040, 640);
@@ -35,7 +37,6 @@ internal sealed class VentanaEditor : Form
         _nucleo.Motor.EstadoCambio -= AlEstado;
         _nucleo.Motor.LegibilidadLista -= AlLegibilidad;
         _nucleo.Motor.SensoresLeidos -= AlSensores;
-        _nucleo.AjustesCambiaron -= AlAjustes;
         _puente?.Dispose();
         _web.Dispose();
         base.OnFormClosed(e);
@@ -50,7 +51,7 @@ internal sealed class VentanaEditor : Form
         }
         catch (WebView2RuntimeNotFoundException)
         {
-            MessageBox.Show("Para el editor hace falta WebView2 de Microsoft, que viene con Windows 11. Instálalo desde go.microsoft.com/fwlink/p/?LinkId=2124703.", "Vitral", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(Textos.T("webview"), "Vitral", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             Close();
             return;
         }
@@ -70,12 +71,11 @@ internal sealed class VentanaEditor : Form
         web.NewWindowRequested += (_, e) => e.Handled = true;
         web.WebMessageReceived += AlMensaje;
 
-        _puente = new Puente(_nucleo, Enviar, () => _ultimo?.Vista);
+        _puente = new Puente(_nucleo, _actualizador, Enviar, () => _ultimo?.Vista);
         _nucleo.Motor.CuadroListo += AlCuadro;
         _nucleo.Motor.EstadoCambio += AlEstado;
         _nucleo.Motor.LegibilidadLista += AlLegibilidad;
         _nucleo.Motor.SensoresLeidos += AlSensores;
-        _nucleo.AjustesCambiaron += AlAjustes;
         web.Navigate($"https://{HostApp}/index.html");
     }
 
@@ -127,8 +127,6 @@ internal sealed class VentanaEditor : Form
     private void AlLegibilidad(ResultadoLegibilidad? r) => Despachar(() => Enviar(Mensajes.Legibilidad(r)));
 
     private void AlSensores(Core.Sensores.LecturaSensores l) => Despachar(() => Enviar(Mensajes.Valores(l)));
-
-    private void AlAjustes() => Enviar(Mensajes.Ajustes(_nucleo.Ajustes));
 
     private void Despachar(Action accion)
     {

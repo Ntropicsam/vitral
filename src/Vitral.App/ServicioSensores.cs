@@ -54,7 +54,7 @@ internal static class ServicioSensores
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or Win32Exception or System.ServiceProcess.TimeoutException)
         {
-            MessageBox.Show($"No se pudo {(accion == "instalar" ? "instalar" : "quitar")} el lector de la CPU: {e.Message}", "Vitral", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(Textos.T("lector.error", Textos.T(accion == "instalar" ? "lector.instalar" : "lector.quitar"), e.Message), "Vitral", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return 1;
         }
     }

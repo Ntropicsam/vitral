@@ -21,11 +21,14 @@ internal sealed class Puente : IDisposable
     private List<int>? _videoDuraciones;
     private long _videoBytes;
 
-    public Puente(Nucleo nucleo, Action<string> enviar, Func<byte[]?> ultimaVista)
+    private readonly PuenteAjustes _ajustes;
+
+    public Puente(Nucleo nucleo, Actualizador actualizador, Action<string> enviar, Func<byte[]?> ultimaVista)
     {
         _nucleo = nucleo;
         _enviar = enviar;
         _ultimaVista = ultimaVista;
+        _ajustes = new PuenteAjustes(nucleo, actualizador, enviar);
         _guardar.Tick += (_, _) => GuardarPendiente();
         _nucleo.LectorCpuListo += AlLectorCpu;
     }
@@ -55,12 +58,20 @@ internal sealed class Puente : IDisposable
         catch (Exception e) when (e is TemaInvalidoException or FormatoDeMedioException or IOException or KeyNotFoundException or FormatException or ArgumentException)
         {
             Registro.Escribir($"Editor: {e.Message}");
-            _enviar(Mensajes.Error(e.Message));
+            var clave = e switch
+            {
+                FormatoDeMedioException => "error.medio",
+                TemaInvalidoException => "error.tema",
+                IOException => "error.disco",
+                _ => "error.otro",
+            };
+            _enviar(Mensajes.Error(Textos.T(clave, e.Message)));
         }
     }
 
     public void Dispose()
     {
+        _ajustes.Dispose();
         _nucleo.LectorCpuListo -= AlLectorCpu;
         GuardarPendiente();
         _guardar.Dispose();
@@ -83,7 +94,7 @@ internal sealed class Puente : IDisposable
                 Cambiar(m["tema"]?.ToJsonString() ?? string.Empty);
                 break;
             case "tema.nuevo":
-                Nuevo();
+                Nuevo(Enum.TryParse<Distribucion>(Mensajes.Texto(m, "distribucion"), out var d) ? d : Distribucion.Completa);
                 break;
             case "tema.duplicar":
                 GuardarPendiente();
@@ -118,16 +129,11 @@ internal sealed class Puente : IDisposable
             case "legibilidad":
                 _nucleo.Motor.MedirLegibilidad(Mensajes.Texto(m, "capaId") ?? string.Empty);
                 break;
-            case "lector.instalar":
-                _ = _nucleo.InstalarLectorCpuAsync();
-                break;
-            case "ajustes.cambiar":
-                var brillo = Mensajes.Entero(m, "brillo");
-                var rotacion = Mensajes.Entero(m, "rotacion");
-                _nucleo.CambiarAjustes(a => a with { Brillo = brillo ?? a.Brillo, Rotacion = rotacion ?? a.Rotacion });
-                break;
             default:
-                Registro.Escribir($"Editor: mensaje desconocido «{tipo}».");
+                if (!_ajustes.Atender(tipo, m))
+                {
+                    Registro.Escribir($"Editor: mensaje desconocido «{tipo}».");
+                }
                 break;
         }
     }
@@ -138,7 +144,7 @@ internal sealed class Puente : IDisposable
         _nucleo.Motor.VistaPrevia = true;
         var ui = TaskScheduler.FromCurrentSynchronizationContext();
         _nucleo.EsperarSensoresAsync().ContinueWith(t => _enviar(Mensajes.Sensores(t.Result, _nucleo.PuedeLeerCpu)), CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, ui);
-        _enviar(Mensajes.Ajustes(_nucleo.Ajustes));
+        _ajustes.Arrancar();
         _nucleo.Iniciado.ContinueWith(_ => AbrirInicial(), CancellationToken.None, TaskContinuationOptions.None, ui);
     }
 
@@ -155,7 +161,7 @@ internal sealed class Puente : IDisposable
         }
         else
         {
-            Nuevo();
+            Nuevo(Distribucion.SoloDatos);
         }
     }
 
@@ -211,10 +217,10 @@ internal sealed class Puente : IDisposable
         }
     }
 
-    private void Nuevo()
+    private void Nuevo(Distribucion distribucion)
     {
         GuardarPendiente();
-        AbrirGuardado(_nucleo.Temas.Crear(_nucleo.TemaNuevo()));
+        AbrirGuardado(_nucleo.Temas.Crear(_nucleo.CrearTema(distribucion)));
         _nucleo.AvisarTemas();
     }
 
@@ -235,7 +241,7 @@ internal sealed class Puente : IDisposable
         {
             if (restante is null)
             {
-                Nuevo();
+                Nuevo(Distribucion.SoloDatos);
                 return;
             }
             AbrirGuardado(restante);

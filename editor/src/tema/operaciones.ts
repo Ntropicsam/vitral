@@ -21,7 +21,12 @@ function sensorLibre(tema: Tema, sensores: readonly SensorInfo[]): string {
   return (temperatura.find((s) => !usados.has(s.id)) ?? temperatura[0] ?? sensores[0])?.id ?? "";
 }
 
-export function crearCapa(tipo: TipoCapa, tema: Tema, sensores: readonly SensorInfo[]): Capa {
+export function crearCapa(
+  tipo: TipoCapa,
+  tema: Tema,
+  sensores: readonly SensorInfo[],
+  nombres: Record<TipoCapa, string> = { sensor: "Sensor", texto: "Texto", medidor: "Medidor" },
+): Capa {
   const id = nuevoId(tema.capas.map((c) => c.id));
   const base = { id, visible: true, x: Math.round(tema.ancho / 2), y: Math.round(tema.alto / 3) };
   switch (tipo) {
@@ -31,7 +36,7 @@ export function crearCapa(tipo: TipoCapa, tema: Tema, sensores: readonly SensorI
       const capa: CapaSensor = {
         ...base,
         tipo: "sensor",
-        nombre: sensor?.nombre ?? "Sensor",
+        nombre: sensor?.nombre ?? nombres.sensor,
         sensorId,
         etiqueta: sensor ? etiquetaCorta(sensor) : "",
         formato: "Corto",
@@ -39,6 +44,9 @@ export function crearCapa(tipo: TipoCapa, tema: Tema, sensores: readonly SensorI
         color: "#f4efe6",
         tamanoEtiqueta: 22,
         colorEtiqueta: "#9aa3b5",
+        fuente: "barlow",
+        fuenteEtiqueta: "barlow",
+        posicionEtiqueta: "Encima",
         alineacion: "Centro",
         velo: false,
       };
@@ -48,10 +56,11 @@ export function crearCapa(tipo: TipoCapa, tema: Tema, sensores: readonly SensorI
       const capa: CapaTexto = {
         ...base,
         tipo: "texto",
-        nombre: "Texto",
-        texto: "Texto",
+        nombre: nombres.texto,
+        texto: nombres.texto,
         tamano: 40,
         color: "#f4efe6",
+        fuente: "barlow",
         alineacion: "Centro",
         velo: false,
       };
@@ -63,7 +72,7 @@ export function crearCapa(tipo: TipoCapa, tema: Tema, sensores: readonly SensorI
         ...base,
         x: Math.round(tema.ancho / 2 - 80),
         tipo: "medidor",
-        nombre: "Medidor",
+        nombre: nombres.medidor,
         sensorId,
         estilo: "Anillo",
         minimo: 0,
@@ -72,6 +81,7 @@ export function crearCapa(tipo: TipoCapa, tema: Tema, sensores: readonly SensorI
         grosor: 14,
         color: "#ffb020",
         colorPista: "#2a2f3a",
+        fuente: "barlow",
         mostrarValor: true,
         formato: "Corto",
       };

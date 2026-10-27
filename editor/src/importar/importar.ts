@@ -1,5 +1,10 @@
-import { cambiar } from "../estado/tienda";
+import { cambiar, obtener } from "../estado/tienda";
+import { traducir, type Clave } from "../i18n";
 import { enviar } from "../puente/puente";
+
+function tx(clave: Clave, datos?: Record<string, string>): string {
+  return traducir(obtener().ajustes.idiomaEfectivo, clave, datos);
+}
 
 export const MAXIMO_ARCHIVO = 50 * 1024 * 1024;
 export const MAXIMO_VIDEO_SEGUNDOS = 300;
@@ -22,17 +27,17 @@ export async function importarArchivo(archivo: File, lienzo: { ancho: number; al
     return;
   }
   if (archivo.size > MAXIMO_ARCHIVO) {
-    cambiar({ error: "Ese archivo pesa más de 50 MB. Prueba con uno más liviano." });
+    cambiar({ error: tx("importar.pesado") });
     return;
   }
-  cambiar({ importando: { mensaje: `Trayendo ${archivo.name}…`, progreso: 0 } });
+  cambiar({ importando: { mensaje: tx("importar.trayendo", { nombre: archivo.name }), progreso: 0 } });
   enviar({ tipo: "fondo.archivo", nombre: archivo.name, datos: base64(await archivo.arrayBuffer()) });
 }
 
 function esperar(el: HTMLVideoElement, evento: "loadeddata" | "seeked"): Promise<void> {
   return new Promise((resolver, rechazar) => {
     const ok = () => { limpiar(); resolver(); };
-    const mal = () => { limpiar(); rechazar(new Error("El video no se pudo leer.")); };
+    const mal = () => { limpiar(); rechazar(new Error(tx("importar.videoMal"))); };
     const limpiar = () => { el.removeEventListener(evento, ok); el.removeEventListener("error", mal); };
     el.addEventListener(evento, ok, { once: true });
     el.addEventListener("error", mal, { once: true });
@@ -65,12 +70,12 @@ async function importarVideo(archivo: File, lienzo: { ancho: number; alto: numbe
       ctx.drawImage(video, (lienzo.ancho - w) / 2, (lienzo.alto - h) / 2, w, h);
       const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.88 });
       enviar({ tipo: "fondo.video.cuadro", jpeg: base64(await blob.arrayBuffer()), duracion: ms });
-      if (i % 6 === 0) cambiar({ importando: { mensaje: `Convirtiendo ${archivo.name}…`, progreso: i / total } });
+      if (i % 6 === 0) cambiar({ importando: { mensaje: tx("importar.convirtiendo", { nombre: archivo.name }), progreso: i / total } });
     }
-    cambiar({ importando: { mensaje: "Guardando el fondo…", progreso: 1 } });
+    cambiar({ importando: { mensaje: tx("importar.guardando"), progreso: 1 } });
     enviar({ tipo: "fondo.video.fin" });
   } catch (e) {
-    cambiar({ importando: null, error: e instanceof Error ? e.message : "El video no se pudo leer." });
+    cambiar({ importando: null, error: tx("importar.videoMal") });
   } finally {
     URL.revokeObjectURL(url);
   }

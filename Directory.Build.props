@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Version>0.1.0</Version>
+    <Authors>Ntropicsam</Authors>
+    <Product>Vitral</Product>
+    <Copyright>GPL-3.0-or-later</Copyright>
+
+    <NoWarn>$(NoWarn);CA1707;CA1711;CA1716;CA1720;CA1710;CA1724;CA1305;CA1307;CA1309;CA1310;CA1848;CA2007</NoWarn>
+  </PropertyGroup>
+</Project>

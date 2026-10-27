@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Barlow Semi Condensed";
+  font-weight: 600;
+  src: url("../../src/Vitral.Core/Fuentes/BarlowSemiCondensed-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Barlow Semi Condensed";
+  font-weight: 500;
+  src: url("../../src/Vitral.Core/Fuentes/BarlowSemiCondensed-Medium.ttf") format("truetype");
+}
+
+@theme {
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-cifras: "Barlow Semi Condensed", "Segoe UI", sans-serif;
+
+  --color-fondo: #121419;
+  --color-panel: #181b21;
+  --color-realce: #20242c;
+  --color-campo: #252a33;
+  --color-borde: #2c313b;
+  --color-borde-fuerte: #737b8b;
+  --color-texto: #ecebe6;
+  --color-texto-2: #a3a9b5;
+  --color-texto-3: #8a919e;
+  --color-acento: #6ea8ff;
+  --color-sobre-acento: #0d0f14;
+  --color-exito: #5dd39e;
+  --color-aviso: #ffb020;
+  --color-peligro: #ff7a6b;
+
+  --radius-control: 6px;
+  --radius-panel: 10px;
+}
+
+@layer base {
+  html,
+  body,
+  #raiz {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--color-fondo);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    user-select: none;
+  }
+  input,
+  textarea {
+    user-select: text;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-acento);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility cifras {
+  font-family: var(--font-cifras);
+  font-variant-numeric: tabular-nums;
+}

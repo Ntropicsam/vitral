@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+publicar/
+editor/node_modules/
+editor/dist/
+src/Vitral.App/wwwroot/
+*.tsbuildinfo

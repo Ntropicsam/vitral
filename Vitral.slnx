@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Vitral.App/Vitral.App.csproj" />
+    <Project Path="src/Vitral.Core/Vitral.Core.csproj" />
+    <Project Path="src/Vitral.Sensores/Vitral.Sensores.csproj" />
+    <Project Path="src/Vitral.Servicio/Vitral.Servicio.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vitral.Core.Tests/Vitral.Core.Tests.csproj" />
+  </Folder>
+</Solution>

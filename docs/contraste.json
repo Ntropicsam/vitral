@@ -1,0 +1,19 @@
+[
+  ["texto sobre fondo", "#ecebe6", "#121419", 4.5],
+  ["texto sobre panel", "#ecebe6", "#181b21", 4.5],
+  ["texto sobre campo", "#ecebe6", "#252a33", 4.5],
+  ["texto-2 sobre panel", "#a3a9b5", "#181b21", 4.5],
+  ["texto-2 sobre realce", "#a3a9b5", "#20242c", 4.5],
+  ["texto-2 sobre campo", "#a3a9b5", "#252a33", 4.5],
+  ["texto-3 sobre panel", "#8a919e", "#181b21", 4.5],
+  ["texto-3 sobre fondo", "#8a919e", "#121419", 4.5],
+  ["boton principal", "#0d0f14", "#6ea8ff", 4.5],
+  ["foco y seleccion sobre fondo", "#6ea8ff", "#121419", 3],
+  ["foco sobre panel", "#6ea8ff", "#181b21", 3],
+  ["borde de campo sobre panel", "#737b8b", "#181b21", 3],
+  ["borde de campo sobre campo", "#737b8b", "#252a33", 3],
+  ["exito sobre panel", "#5dd39e", "#181b21", 4.5],
+  ["aviso sobre panel", "#ffb020", "#181b21", 4.5],
+  ["peligro sobre su fondo", "#ff7a6b", "#3a1f1c", 4.5],
+  ["peligro sobre realce", "#ff7a6b", "#20242c", 4.5]
+]

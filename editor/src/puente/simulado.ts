@@ -18,8 +18,9 @@ const temaInicial: Tema = {
   alto: 480,
   fondo: { tipo: "Animacion", color: "#0d0f14", archivo: "fondo.cuadros", ajuste: "Cubrir" },
   capas: [
-    { tipo: "sensor", id: "cpu", nombre: "CPU", visible: true, x: 600, y: 48, sensorId: sensores[0]!.id, etiqueta: "CPU", formato: "Corto", tamano: 88, color: "#f4efe6", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false },
-    { tipo: "sensor", id: "gpu", nombre: "GPU", visible: true, x: 600, y: 250, sensorId: sensores[2]!.id, etiqueta: "GPU", formato: "Corto", tamano: 88, color: "#f4efe6", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false },
+    { tipo: "medidor", id: "carga", nombre: "Carga de la CPU", visible: true, x: 40, y: 110, sensorId: sensores[1]!.id, estilo: "Anillo", minimo: 0, maximo: 100, ancho: 240, grosor: 18, color: "#ffb020", colorPista: "#262b35", mostrarValor: true, formato: "Corto" },
+    { tipo: "sensor", id: "cpu", nombre: "CPU", visible: true, x: 600, y: 70, sensorId: sensores[0]!.id, etiqueta: "CPU", formato: "Corto", tamano: 96, color: "#f4efe6", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false },
+    { tipo: "sensor", id: "gpu", nombre: "GPU", visible: true, x: 600, y: 260, sensorId: sensores[2]!.id, etiqueta: "GPU", formato: "Corto", tamano: 96, color: "#7ad3ff", tamanoEtiqueta: 22, colorEtiqueta: "#9aa3b5", alineacion: "Derecha", velo: false },
   ],
 };
 
@@ -40,21 +41,41 @@ export function canalSimulado(): Canal {
   function dibujar() {
     ctx.fillStyle = tema.fondo.color;
     ctx.fillRect(0, 0, 640, 480);
-    ctx.fillStyle = "#2a2f3a";
-    const sube = Math.sin((cuadro / 48) * Math.PI * 2) * 8;
-    ctx.beginPath();
-    ctx.ellipse(150, 480 + sube, 120, 220, 0, Math.PI, 0);
-    ctx.fill();
+    const paso = (cuadro / 48) * 640;
+    ctx.fillStyle = "#151a24";
+    for (let x = -640; x < 1280; x += 160) {
+      ctx.beginPath();
+      ctx.moveTo(x + paso, 480);
+      ctx.lineTo(x + paso + 80, 480);
+      ctx.lineTo(x + paso + 320, 0);
+      ctx.lineTo(x + paso + 240, 0);
+      ctx.fill();
+    }
     const cajas: Caja[] = [];
     for (const capa of tema.capas) {
       if (!capa.visible) continue;
       if (capa.tipo === "medidor") {
         cajas.push({ id: capa.id, x: capa.x, y: capa.y, ancho: capa.ancho, alto: capa.estilo === "Barra" ? capa.grosor * 2.6 : capa.ancho });
-        ctx.strokeStyle = capa.color;
+        const cx = capa.x + capa.ancho / 2;
+        const cy = capa.y + capa.ancho / 2;
+        const radio = (capa.ancho - capa.grosor) / 2;
+        const valor = valores[capa.sensorId] ?? 0;
+        const fraccion = Math.min(1, Math.max(0, (valor - capa.minimo) / (capa.maximo - capa.minimo)));
+        ctx.lineCap = "round";
         ctx.lineWidth = capa.grosor;
+        ctx.strokeStyle = capa.colorPista;
         ctx.beginPath();
-        ctx.arc(capa.x + capa.ancho / 2, capa.y + capa.ancho / 2, (capa.ancho - capa.grosor) / 2, 0.75 * Math.PI, 2.25 * Math.PI);
+        ctx.arc(cx, cy, radio, 0.75 * Math.PI, 2.25 * Math.PI);
         ctx.stroke();
+        ctx.strokeStyle = capa.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radio, 0.75 * Math.PI, (0.75 + 1.5 * fraccion) * Math.PI);
+        ctx.stroke();
+        ctx.fillStyle = capa.color;
+        ctx.font = `600 ${capa.ancho * 0.24}px "Barlow Semi Condensed", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(textoSensor(valor, "Carga", capa.formato), cx, cy + capa.ancho * 0.08);
+        ctx.textAlign = "left";
         continue;
       }
       const sensor = capa.tipo === "sensor" ? sensores.find((s) => s.id === capa.sensorId) : null;
@@ -105,6 +126,10 @@ export function canalSimulado(): Canal {
   function recibir(m: HaciaVitral) {
     switch (m.tipo) {
       case "listo":
+        void Promise.all([
+          document.fonts.load('600 96px "Barlow Semi Condensed"'),
+          document.fonts.load('500 22px "Barlow Semi Condensed"'),
+        ]).then(dibujar);
         emitir({ tipo: "sensores", leeCpu: false, lista: sensores });
         emitir({ tipo: "ajustes", brillo, rotacion: 0 });
         emitir({ tipo: "temas", activo: "neon", lista: resumen });

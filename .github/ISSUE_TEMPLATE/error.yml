@@ -1,0 +1,29 @@
+name: Bug / Error
+description: Something doesn't work as it should. / Algo no funciona como debería.
+title: "[Error] "
+labels: ["error"]
+body:
+  - type: textarea
+    id: que
+    attributes:
+      label: What happened / Qué pasó
+      description: What you did, what you expected and what you saw. / Qué hiciste, qué esperabas y qué viste.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Vitral version / Versión de Vitral
+      placeholder: 0.1.1
+    validations:
+      required: true
+  - type: input
+    id: modelo
+    attributes:
+      label: Cooler model / Modelo de la líquida
+  - type: textarea
+    id: registro
+    attributes:
+      label: Log / Registro
+      description: The last lines of %LOCALAPPDATA%\VitralDatos\vitral.log
+      render: text

@@ -1,0 +1,41 @@
+name: Screen report / Reporte de pantalla
+description: Tell us whether Vitral works with your cooler. / Cuéntanos si Vitral funciona con tu líquida.
+title: "[Pantalla] "
+labels: ["pantalla"]
+body:
+  - type: input
+    id: modelo
+    attributes:
+      label: Cooler model / Modelo de la líquida
+      placeholder: Mjolnir Vision 360
+    validations:
+      required: true
+  - type: input
+    id: ids
+    attributes:
+      label: Hardware id / Identificador de hardware
+      description: Device Manager → USBDISPLAY → Properties → Details → Hardware Ids
+      placeholder: USB\VID_87AD&PID_70DB
+    validations:
+      required: true
+  - type: dropdown
+    id: resultado
+    attributes:
+      label: Does it work? / ¿Funciona?
+      options:
+        - "Yes, everything looks right / Sí, todo bien"
+        - "Partly (wrong size, rotated, colors) / A medias (tamaño, giro, colores)"
+        - "No image / No muestra nada"
+    validations:
+      required: true
+  - type: textarea
+    id: registro
+    attributes:
+      label: Log line / Línea del registro
+      description: The "Pantalla conectada" line from %LOCALAPPDATA%\VitralDatos\vitral.log
+      render: text
+  - type: textarea
+    id: notas
+    attributes:
+      label: Anything else / Algo más
+      description: Photos of the screen help a lot. / Las fotos de la pantalla ayudan mucho.

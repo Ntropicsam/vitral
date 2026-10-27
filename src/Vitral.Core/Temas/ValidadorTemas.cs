@@ -26,7 +26,7 @@ public static class ValidadorTemas
             Nombre = Recortar(tema.Nombre, LargoMaximoNombre, "Tema sin nombre"),
             Ancho = ancho,
             Alto = alto,
-            Fondo = NormalizarFondo(tema.Fondo ?? new Fondo()),
+            Fondo = NormalizarFondo(tema.Fondo ?? new Fondo(), ancho, alto),
             Capas = capas,
         };
     }
@@ -57,17 +57,34 @@ public static class ValidadorTemas
         return respaldo;
     }
 
-    private static Fondo NormalizarFondo(Fondo fondo)
+    private static Fondo NormalizarFondo(Fondo fondo, int ancho, int alto)
     {
         var archivo = ArchivoSeguro(fondo.Archivo);
         var tipo = fondo.Tipo != TipoFondo.Color && archivo is null ? TipoFondo.Color : fondo.Tipo;
+        var marco = NormalizarMarco(fondo.Marco, ancho, alto);
+        var lado = marco is null ? Math.Min(ancho, alto) : Math.Min(marco.Ancho, marco.Alto);
         return fondo with
         {
             Tipo = tipo,
             Color = Color(fondo.Color, "#0d0f14"),
             Archivo = tipo == TipoFondo.Color ? null : archivo,
             Ajuste = Enum.IsDefined(fondo.Ajuste) ? fondo.Ajuste : AjusteFondo.Cubrir,
+            Marco = marco,
+            RadioMarco = Limitar(fondo.RadioMarco, 0, lado / 2),
         };
+    }
+
+    private static Marco? NormalizarMarco(Marco? marco, int ancho, int alto)
+    {
+        if (marco is null)
+        {
+            return null;
+        }
+        var x = Limitar(marco.X, 0, ancho - 16);
+        var y = Limitar(marco.Y, 0, alto - 16);
+        var w = Limitar(marco.Ancho, 16, ancho - x);
+        var h = Limitar(marco.Alto, 16, alto - y);
+        return x == 0 && y == 0 && w >= ancho && h >= alto ? null : new Marco(x, y, w, h);
     }
 
     private static Capa NormalizarCapa(Capa capa, int ancho, int alto, HashSet<string> ids)
@@ -93,6 +110,9 @@ public static class ValidadorTemas
                 TamanoEtiqueta = Limitar(s.TamanoEtiqueta, 8, 200),
                 Color = Color(s.Color, "#f4efe6"),
                 ColorEtiqueta = Color(s.ColorEtiqueta, "#9aa3b5"),
+                Fuente = Render.Fuentes.Normalizar(s.Fuente),
+                FuenteEtiqueta = Render.Fuentes.Normalizar(s.FuenteEtiqueta),
+                PosicionEtiqueta = Enum.IsDefined(s.PosicionEtiqueta) ? s.PosicionEtiqueta : PosicionEtiqueta.Encima,
                 Formato = Enum.IsDefined(s.Formato) ? s.Formato : FormatoValor.Corto,
                 Alineacion = Enum.IsDefined(s.Alineacion) ? s.Alineacion : Alineacion.Izquierda,
             },
@@ -101,6 +121,7 @@ public static class ValidadorTemas
                 Texto = Recortar(t.Texto, LargoMaximoTexto, string.Empty),
                 Tamano = Limitar(t.Tamano, 8, 400),
                 Color = Color(t.Color, "#f4efe6"),
+                Fuente = Render.Fuentes.Normalizar(t.Fuente),
                 Alineacion = Enum.IsDefined(t.Alineacion) ? t.Alineacion : Alineacion.Izquierda,
             },
             CapaMedidor m => NormalizarMedidor(m),
@@ -126,6 +147,7 @@ public static class ValidadorTemas
             Grosor = Limitar(m.Grosor, 1, 200),
             Color = Color(m.Color, "#ffb020"),
             ColorPista = Color(m.ColorPista, "#2a2f3a"),
+            Fuente = Render.Fuentes.Normalizar(m.Fuente),
             Formato = Enum.IsDefined(m.Formato) ? m.Formato : FormatoValor.Corto,
         };
     }

@@ -19,7 +19,11 @@ public static class Escena
         ArgumentNullException.ThrowIfNull(lienzo);
         ArgumentNullException.ThrowIfNull(e);
         DibujarFondo(lienzo, e.Tema, e.Fondo, e.Cuadro);
-        var cajas = new List<CajaCapa>(e.Tema.Capas.Count);
+        var cajas = new List<CajaCapa>(e.Tema.Capas.Count + 1);
+        if (e.Tema.Fondo.Marco is { } marco)
+        {
+            cajas.Add(new CajaCapa(IdFondo, marco.X, marco.Y, marco.Ancho, marco.Alto));
+        }
         foreach (var capa in e.Tema.Capas)
         {
             if (!capa.Visible)
@@ -52,9 +56,25 @@ public static class Escena
         {
             return;
         }
-        var destino = Ajustar(imagen.Width, imagen.Height, tema.Ancho, tema.Alto, tema.Fondo.Ajuste);
+        var marco = tema.Fondo.Marco ?? new Marco(0, 0, tema.Ancho, tema.Alto);
+        var destino = Ajustar(imagen.Width, imagen.Height, marco.Ancho, marco.Alto, tema.Fondo.Ajuste);
+        destino.Offset(marco.X, marco.Y);
+        lienzo.Save();
+        var area = new SKRect(marco.X, marco.Y, marco.X + marco.Ancho, marco.Y + marco.Alto);
+        if (tema.Fondo.RadioMarco > 0)
+        {
+            using var redondeado = new SKRoundRect(area, tema.Fondo.RadioMarco);
+            lienzo.ClipRoundRect(redondeado, antialias: true);
+        }
+        else
+        {
+            lienzo.ClipRect(area);
+        }
         lienzo.DrawImage(imagen, destino, Muestreo);
+        lienzo.Restore();
     }
+
+    public const string IdFondo = "__fondo";
 
     public static SKRect Ajustar(float ancho, float alto, float anchoLienzo, float altoLienzo, AjusteFondo ajuste)
     {
@@ -86,7 +106,7 @@ public static class Escena
                 }
             case CapaTexto t when !string.IsNullOrEmpty(t.Texto):
                 {
-                    using var linea = new LineaTexto(t.Texto, Tipografia.Etiquetas, t.Tamano);
+                    using var linea = new LineaTexto(t.Texto, Tipografia.Etiquetas(t.Fuente), t.Tamano);
                     return CajaTexto(t, linea);
                 }
             default:
@@ -96,36 +116,66 @@ public static class Escena
 
     private static CajaCapa DibujarSensor(SKCanvas lienzo, CapaSensor s, EntradaEscena e)
     {
-        var (caja, etiqueta, valor, baseEtiqueta, baseValor) = DistribuirSensor(s, e);
-        using var valorLiberable = valor;
-        using var etiquetaLiberable = etiqueta;
+        var d = DistribuirSensor(s, e);
+        using var valorLiberable = d.Valor;
+        using var etiquetaLiberable = d.Etiqueta;
         if (s.Velo)
         {
-            DibujarVelo(lienzo, caja, s.Tamano);
+            DibujarVelo(lienzo, d.Caja, s.Tamano);
         }
         using var pintura = new SKPaint { IsAntialias = true };
-        if (etiqueta is not null)
+        if (d.Etiqueta is not null)
         {
             pintura.Color = SKColor.Parse(s.ColorEtiqueta);
-            etiqueta.Dibujar(lienzo, LineaTexto.Izquierda(s.X, etiqueta.Ancho, s.Alineacion), baseEtiqueta, pintura);
+            d.Etiqueta.Dibujar(lienzo, d.XEtiqueta, d.BaseEtiqueta, pintura);
         }
         pintura.Color = SKColor.Parse(s.Color);
-        valor.Dibujar(lienzo, LineaTexto.Izquierda(s.X, valor.Ancho, s.Alineacion), baseValor, pintura);
-        return caja;
+        d.Valor.Dibujar(lienzo, d.XValor, d.BaseValor, pintura);
+        return d.Caja;
     }
 
-    private static (CajaCapa Caja, LineaTexto? Etiqueta, LineaTexto Valor, float BaseEtiqueta, float BaseValor) DistribuirSensor(CapaSensor s, EntradaEscena e)
+    private sealed record DistribucionSensor(CajaCapa Caja, LineaTexto? Etiqueta, LineaTexto Valor, float XEtiqueta, float BaseEtiqueta, float XValor, float BaseValor);
+
+    private static DistribucionSensor DistribuirSensor(CapaSensor s, EntradaEscena e)
     {
         var texto = FormatoSensor.Texto(e.Lectura.Valor(s.SensorId), e.TipoDe(s.SensorId), s.Formato);
-        var valor = new LineaTexto(texto, Tipografia.Cifras, s.Tamano);
-        var etiqueta = string.IsNullOrEmpty(s.Etiqueta) ? null : new LineaTexto(s.Etiqueta, Tipografia.Etiquetas, s.TamanoEtiqueta);
+        var valor = new LineaTexto(texto, Tipografia.Cifras(s.Fuente), s.Tamano);
+        var etiqueta = string.IsNullOrEmpty(s.Etiqueta) ? null : new LineaTexto(s.Etiqueta, Tipografia.Etiquetas(s.FuenteEtiqueta), s.TamanoEtiqueta);
+        if (etiqueta is null)
+        {
+            var solo = LineaTexto.Izquierda(s.X, valor.Ancho, s.Alineacion);
+            return new(new CajaCapa(s.Id, solo, s.Y, valor.Ancho, valor.AltoMayuscula), null, valor, 0, 0, solo, s.Y + valor.AltoMayuscula);
+        }
 
-        var baseEtiqueta = s.Y + (etiqueta?.AltoMayuscula ?? 0);
-        var separacion = etiqueta is null ? 0 : s.TamanoEtiqueta * 0.5f;
-        var baseValor = baseEtiqueta + separacion + valor.AltoMayuscula;
-        var ancho = Math.Max(valor.Ancho, etiqueta?.Ancho ?? 0);
-        var caja = new CajaCapa(s.Id, LineaTexto.Izquierda(s.X, ancho, s.Alineacion), s.Y, ancho, baseValor - s.Y);
-        return (caja, etiqueta, valor, baseEtiqueta, baseValor);
+        var separacion = s.TamanoEtiqueta * 0.5f;
+        if (s.PosicionEtiqueta == PosicionEtiqueta.Lado)
+        {
+            var hueco = s.TamanoEtiqueta * 0.6f;
+            var total = etiqueta.Ancho + hueco + valor.Ancho;
+            var izquierda = LineaTexto.Izquierda(s.X, total, s.Alineacion);
+            var baseLinea = s.Y + valor.AltoMayuscula;
+            var caja = new CajaCapa(s.Id, izquierda, s.Y, total, valor.AltoMayuscula);
+            return new(caja, etiqueta, valor, izquierda, baseLinea, izquierda + etiqueta.Ancho + hueco, baseLinea);
+        }
+
+        var ancho = Math.Max(valor.Ancho, etiqueta.Ancho);
+        var xValor = LineaTexto.Izquierda(s.X, valor.Ancho, s.Alineacion);
+        var xEtiqueta = LineaTexto.Izquierda(s.X, etiqueta.Ancho, s.Alineacion);
+        float baseEtiqueta, baseValor, fondo;
+        if (s.PosicionEtiqueta == PosicionEtiqueta.Debajo)
+        {
+            baseValor = s.Y + valor.AltoMayuscula;
+            baseEtiqueta = baseValor + separacion + etiqueta.AltoMayuscula;
+            fondo = baseEtiqueta;
+        }
+        else
+        {
+            baseEtiqueta = s.Y + etiqueta.AltoMayuscula;
+            baseValor = baseEtiqueta + separacion + valor.AltoMayuscula;
+            fondo = baseValor;
+        }
+        var cajaColumna = new CajaCapa(s.Id, LineaTexto.Izquierda(s.X, ancho, s.Alineacion), s.Y, ancho, fondo - s.Y);
+        return new(cajaColumna, etiqueta, valor, xEtiqueta, baseEtiqueta, xValor, baseValor);
     }
 
     private static CajaCapa DibujarTexto(SKCanvas lienzo, CapaTexto t)
@@ -134,7 +184,7 @@ public static class Escena
         {
             return new CajaCapa(t.Id, t.X, t.Y, t.Tamano, t.Tamano);
         }
-        using var linea = new LineaTexto(t.Texto, Tipografia.Etiquetas, t.Tamano);
+        using var linea = new LineaTexto(t.Texto, Tipografia.Etiquetas(t.Fuente), t.Tamano);
         var caja = CajaTexto(t, linea);
         if (t.Velo)
         {
@@ -168,7 +218,7 @@ public static class Escena
             var alto = m.Grosor;
             if (m.MostrarValor)
             {
-                using var linea = new LineaTexto(texto, Tipografia.Cifras, Math.Max(14, m.Grosor * 1.6f));
+                using var linea = new LineaTexto(texto, Tipografia.Cifras(m.Fuente), Math.Max(14, m.Grosor * 1.6f));
                 using var pintura = new SKPaint { IsAntialias = true, Color = SKColor.Parse(m.Color) };
                 var baseY = m.Y + m.Grosor + (linea.Tamano * 0.25f) + linea.AltoMayuscula;
                 linea.Dibujar(lienzo, m.X, baseY, pintura);
@@ -187,7 +237,7 @@ public static class Escena
         }
         if (m.MostrarValor)
         {
-            using var linea = new LineaTexto(texto, Tipografia.Cifras, m.Ancho * 0.24f);
+            using var linea = new LineaTexto(texto, Tipografia.Cifras(m.Fuente), m.Ancho * 0.24f);
             using var pintura = new SKPaint { IsAntialias = true, Color = SKColor.Parse(m.Color) };
             linea.Dibujar(lienzo, centro.X - (linea.Ancho / 2), centro.Y + (linea.AltoMayuscula / 2), pintura);
         }

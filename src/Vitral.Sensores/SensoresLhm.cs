@@ -15,6 +15,7 @@ public sealed class SensoresLhm : IFuenteSensores
     private readonly bool _conPermisos;
     private List<Entrada> _entradas = [];
     private Dictionary<string, Entrada> _porId = [];
+    private Agrupacion _agrupacion = Agrupacion.Vacia;
     private IReadOnlySet<string>? _interes;
 
     public SensoresLhm()
@@ -60,31 +61,13 @@ public sealed class SensoresLhm : IFuenteSensores
         }
     }
 
-    public string? Sugerido(bool gpu)
-    {
-        var candidatos = _entradas
-            .Where(e => e.Sensor.SensorType == SensorType.Temperature && EsGpu(e.Sensor.Hardware.HardwareType) == gpu
-                && (gpu || e.Sensor.Hardware.HardwareType == HardwareType.Cpu))
-            .ToList();
-        string[] preferidos = gpu ? ["GPU Core", "Core"] : ["Tctl", "Package", "Tdie", "Core"];
-        foreach (var nombre in preferidos)
-        {
-            var hallado = candidatos.Find(e => e.Sensor.Name.Contains(nombre, StringComparison.OrdinalIgnoreCase));
-            if (hallado is not null)
-            {
-                return hallado.Info.Id;
-            }
-        }
-        return candidatos.Count > 0 ? candidatos[0].Info.Id : null;
-    }
-
     public void Dispose() => _computador.Close();
 
     private LecturaSensores LeerSinCandado(IReadOnlySet<string>? ids)
     {
         var elegidas = ids is null
             ? _entradas
-            : ids.Select(id => _porId.GetValueOrDefault(id)).OfType<Entrada>().ToList();
+            : _agrupacion.Expandir(ids).Select(id => _porId.GetValueOrDefault(id)).OfType<Entrada>().ToList();
         foreach (var raiz in elegidas.Select(e => e.Raiz).Distinct())
         {
             if (_fallas.GetValueOrDefault(raiz) >= MaximoFallas)
@@ -113,6 +96,7 @@ public sealed class SensoresLhm : IFuenteSensores
                 valores[e.Info.Id] = e.Sensor.SensorType == SensorType.SmallData ? v / 1024 : v;
             }
         }
+        Agregados.Completar(valores, _agrupacion, ids ?? (IEnumerable<string>)_agrupacion.Miembros.Keys);
         return new LecturaSensores(valores);
     }
 
@@ -125,7 +109,8 @@ public sealed class SensoresLhm : IFuenteSensores
         }
         _entradas = lista;
         _porId = lista.ToDictionary(e => e.Info.Id, StringComparer.Ordinal);
-        Sensores = lista.Select(e => e.Info).ToList();
+        _agrupacion = Agregados.Agrupar(lista.Select(e => e.Info).ToList());
+        Sensores = _agrupacion.Sensores;
         Registro.Escribir($"Sensores: {Sensores.Count} en {_computador.Hardware.Count} dispositivos{(_conPermisos ? "" : ", sin permisos para la CPU")}.");
     }
 
@@ -169,8 +154,6 @@ public sealed class SensoresLhm : IFuenteSensores
         SensorType.Control or SensorType.Level => TipoSensor.Carga,
         _ => null,
     };
-
-    private static bool EsGpu(HardwareType tipo) => tipo is HardwareType.GpuAmd or HardwareType.GpuNvidia or HardwareType.GpuIntel;
 
     private static bool EsAdministrador()
     {

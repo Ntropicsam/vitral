@@ -1,21 +1,53 @@
+using System.Collections.Concurrent;
 using SkiaSharp;
 using Vitral.Core.Temas;
 
 namespace Vitral.Core.Render;
 
+public sealed record FuenteVitral(string Id, string Nombre, string Archivo, string ArchivoEtiqueta);
+
+public static class Fuentes
+{
+    public const string PorDefecto = "barlow";
+
+    public static readonly IReadOnlyList<FuenteVitral> Todas =
+    [
+        new(PorDefecto, "Barlow Semi Condensed", "BarlowSemiCondensed-SemiBold.ttf", "BarlowSemiCondensed-Medium.ttf"),
+        new("saira", "Saira Condensed", "SairaCondensed-SemiBold.ttf", "SairaCondensed-SemiBold.ttf"),
+        new("rajdhani", "Rajdhani", "Rajdhani-SemiBold.ttf", "Rajdhani-SemiBold.ttf"),
+        new("chakra", "Chakra Petch", "ChakraPetch-SemiBold.ttf", "ChakraPetch-SemiBold.ttf"),
+        new("bebas", "Bebas Neue", "BebasNeue-Regular.ttf", "BebasNeue-Regular.ttf"),
+        new("anton", "Anton", "Anton-Regular.ttf", "Anton-Regular.ttf"),
+        new("plexmono", "IBM Plex Mono", "IBMPlexMono-SemiBold.ttf", "IBMPlexMono-SemiBold.ttf"),
+        new("russo", "Russo One", "RussoOne-Regular.ttf", "RussoOne-Regular.ttf"),
+    ];
+
+    public static string Normalizar(string? id) =>
+        id is not null && Todas.Any(f => f.Id == id) ? id : PorDefecto;
+}
+
 internal static class Tipografia
 {
-    public static readonly SKTypeface Cifras = Cargar("BarlowSemiCondensed-SemiBold.ttf");
-    public static readonly SKTypeface Etiquetas = Cargar("BarlowSemiCondensed-Medium.ttf");
+    private static readonly ConcurrentDictionary<string, SKTypeface> Cargadas = new(StringComparer.Ordinal);
 
-    private static SKTypeface Cargar(string archivo)
+    public static SKTypeface Cifras(string? fuente) => Cargar(Buscar(fuente).Archivo);
+
+    public static SKTypeface Etiquetas(string? fuente) => Cargar(Buscar(fuente).ArchivoEtiqueta);
+
+    private static FuenteVitral Buscar(string? id)
+    {
+        var normal = Fuentes.Normalizar(id);
+        return Fuentes.Todas.First(f => f.Id == normal);
+    }
+
+    private static SKTypeface Cargar(string archivo) => Cargadas.GetOrAdd(archivo, a =>
     {
         var ensamblado = typeof(Tipografia).Assembly;
-        var nombre = ensamblado.GetManifestResourceNames().Single(n => n.EndsWith(archivo, StringComparison.Ordinal));
+        var nombre = ensamblado.GetManifestResourceNames().Single(n => n.EndsWith(a, StringComparison.Ordinal));
         using var flujo = ensamblado.GetManifestResourceStream(nombre)
-            ?? throw new InvalidOperationException($"Falta la fuente {archivo}.");
-        return SKTypeface.FromStream(flujo) ?? throw new InvalidOperationException($"La fuente {archivo} está dañada.");
-    }
+            ?? throw new InvalidOperationException($"Falta la fuente {a}.");
+        return SKTypeface.FromStream(flujo) ?? throw new InvalidOperationException($"La fuente {a} está dañada.");
+    });
 }
 
 internal sealed class LineaTexto : IDisposable

@@ -62,6 +62,8 @@ public static class TemasIniciales
             CapaMedidor m => m with { Ancho = m.Ancho * e, Grosor = m.Grosor * e },
             var otra => otra,
         }).ToList();
-        return tema with { Ancho = ancho, Alto = alto, Capas = capas };
+        var marco = tema.Fondo.Marco is { } m0 ? new Marco(m0.X * ex, m0.Y * ey, m0.Ancho * ex, m0.Alto * ey) : null;
+        var fondo = tema.Fondo with { Marco = marco, RadioMarco = tema.Fondo.RadioMarco * e };
+        return tema with { Ancho = ancho, Alto = alto, Capas = capas, Fondo = fondo };
     }
 }

@@ -37,5 +37,23 @@ public static class Catalogo
         _ => PorDefecto,
     };
 
+    public static readonly IReadOnlyList<string> Elegibles =
+    [
+        "7-2", "7-1", "5-0", "1-0", "3-0", "4-1", "6-1", "6-2",
+        "1-48", "1-49", "68-0", "69-0", "16-0", "13-0", "11-0", "12-0",
+    ];
+
+    public static string Clave(byte pm, byte sub) => $"{pm}-{sub}";
+
+    public static ModeloPanel? PorClave(string? clave)
+    {
+        if (clave is null || !Elegibles.Contains(clave))
+        {
+            return null;
+        }
+        var partes = clave.Split('-');
+        return Buscar(byte.Parse(partes[0], System.Globalization.CultureInfo.InvariantCulture), byte.Parse(partes[1], System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     private static ModeloPanel Jpeg(int ancho, int alto) => new($"Pantalla {ancho} × {alto}", ancho, alto, FormatoCuadro.Jpeg);
 }

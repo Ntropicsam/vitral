@@ -11,6 +11,10 @@ public sealed record Ajustes
 
     public bool ModoJuego { get; init; } = true;
 
+    public string? ModeloForzado { get; init; }
+
+    public string Idioma { get; init; } = "auto";
+
     public AjustesSalida Salida => new AjustesSalida(Brillo, Rotacion).Normalizado();
 
     public Ajustes Normalizado() => this with
@@ -18,6 +22,8 @@ public sealed record Ajustes
         Brillo = Math.Clamp(Brillo, 0, 100),
         Rotacion = AjustesSalida.NormalizarRotacion(Rotacion),
         TemaActivo = Temas.AlmacenTemas.EsIdValido(TemaActivo) ? TemaActivo : null,
+        ModeloForzado = Dispositivo.Catalogo.PorClave(ModeloForzado) is null ? null : ModeloForzado,
+        Idioma = Idioma is "es" or "en" ? Idioma : "auto",
     };
 }
 

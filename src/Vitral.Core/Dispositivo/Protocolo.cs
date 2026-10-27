@@ -8,7 +8,22 @@ public enum FormatoCuadro
     Rgb565 = 3,
 }
 
-public sealed record InfoPanel(byte Pm, byte Sub, string Identificador, int Ancho, int Alto, FormatoCuadro Formato, int GiroDeFabrica, string Modelo);
+public sealed record InfoPanel(byte Pm, byte Sub, string Identificador, int Ancho, int Alto, FormatoCuadro Formato, int GiroDeFabrica, string Modelo)
+{
+    public string ModeloDetectado { get; init; } = Modelo;
+
+    public bool Forzado { get; init; }
+
+    public InfoPanel Con(ModeloPanel forzado) => this with
+    {
+        Ancho = forzado.Ancho,
+        Alto = forzado.Alto,
+        Formato = forzado.Formato,
+        GiroDeFabrica = forzado.GiroDeFabrica,
+        Modelo = forzado.Nombre,
+        Forzado = true,
+    };
+}
 
 public static class Protocolo
 {

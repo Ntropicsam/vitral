@@ -116,6 +116,18 @@ public sealed class Motor : IDisposable
         _firma = null;
     });
 
+    public void ForzarModelo(string? clave) => Encolar(() =>
+    {
+        if (_pantalla.ModeloForzado == clave)
+        {
+            return;
+        }
+        _pantalla.ModeloForzado = clave;
+        _pantalla.Desconectar();
+        _proximoIntento = 0;
+        _firma = null;
+    });
+
     public void Pausar(bool pausado) => Encolar(() =>
     {
         _pausado = pausado;

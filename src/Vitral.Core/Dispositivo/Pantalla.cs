@@ -22,6 +22,8 @@ public sealed class Pantalla(IBuscadorUsb buscador) : IDisposable
 
     public bool Conectada => _puerto is not null && Estado.Info is not null;
 
+    public string? ModeloForzado { get; set; }
+
     public bool Conectar()
     {
         if (Conectada)
@@ -45,6 +47,10 @@ public sealed class Pantalla(IBuscadorUsb buscador) : IDisposable
         try
         {
             var info = Handshake(apertura.Puerto);
+            if (Catalogo.PorClave(ModeloForzado) is { } forzado)
+            {
+                info = info.Con(forzado);
+            }
             if (info.Formato != FormatoCuadro.Jpeg)
             {
                 apertura.Puerto.Dispose();

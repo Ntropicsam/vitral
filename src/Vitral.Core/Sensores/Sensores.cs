@@ -13,7 +13,7 @@ public enum TipoSensor
     Otro,
 }
 
-public sealed record SensorInfo(string Id, string Nombre, string Hardware, TipoSensor Tipo);
+public sealed record SensorInfo(string Id, string Nombre, string Hardware, TipoSensor Tipo, string? Agregado = null);
 
 public sealed class LecturaSensores(IReadOnlyDictionary<string, float> valores)
 {
